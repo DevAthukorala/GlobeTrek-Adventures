@@ -1,0 +1,28 @@
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:8080:80"
+    environment:
+      DB_DSN: mysql:host=db;dbname=globetrek;charset=utf8mb4
+      DB_USER: globetrek
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: globetrek
+      MYSQL_USER: globetrek
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+volumes:
+  mysql-data:

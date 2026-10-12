@@ -1,0 +1,18 @@
+<?php
+require_once dirname(__DIR__) . '/app/views.php'; require_once dirname(__DIR__) . '/app/bookings.php';
+$p = sql('SELECT * FROM tour_packages WHERE id=? AND active=1', [(int)($_GET['id'] ?? 0)])->fetch();
+if (!$p) { http_response_code(404); page_start('Adventure not found'); heading('TAKE ANOTHER PATH','This adventure is unavailable.'); echo '<div class="container pb-5"><a href="/packages.php">Browse our adventures</a></div>'; page_end(); exit; }
+$error = null;
+if ($_SERVER['REQUEST_METHOD']==='POST') {
+    $u = require_role(['customer']); verify_csrf();
+    try {
+        $token = text_input('request_token',64,64);
+        if (!hash_equals($_SESSION['booking_token'] ?? '',$token)) throw new InvalidArgumentException('This booking form expired. Reload the page and try again.');
+        $id = create_booking((int)$u['id'],(int)$p['id'],text_input('travel_date',10,10),integer_input('travellers',1,100),$token);
+        unset($_SESSION['booking_token']); flash('Booking GT-'.str_pad((string)$id,5,'0',STR_PAD_LEFT).' received. Our team will review your request.'); go('/dashboard.php');
+    } catch (InvalidArgumentException $ex) { $error=$ex->getMessage(); }
+}
+$_SESSION['booking_token'] ??= bin2hex(random_bytes(32));
+page_start($p['title'],'packages'); ?>
+<div class="container section detail-page"><a class="text-link" href="/packages.php">← All adventures</a><div class="detail-heading"><p class="eyebrow"><?= e($p['category']) ?> / <?= e($p['destination']) ?></p><h1><?= e($p['title']) ?></h1><p class="lead-copy"><?= (int)$p['duration_days'] ?> days of discovery · Small groups, up to <?= (int)$p['capacity'] ?> travellers</p></div><img class="detail-image" src="<?= e($p['image_url']) ?>" alt="<?= e($p['destination']) ?>"><div class="row g-5 mt-2"><div class="col-lg-7"><h2>The experience</h2><p class="preserve-lines"><?= e($p['description']) ?></p><h2 class="mt-5">Your journey, day by day</h2><div class="itinerary preserve-lines"><?= e($p['itinerary']) ?></div><h2 class="mt-5">What's included</h2><p class="preserve-lines"><?= e($p['inclusions']) ?></p><p class="muted">Personal expenses and travel insurance are not included. No online payment is taken. A booking is a request until our team confirms it.</p></div><aside class="col-lg-5"><div class="booking-panel"><p class="eyebrow">MAKE IT YOUR NEXT CHAPTER</p><div class="booking-price"><?= money($p['price_cents']) ?><small>/ person</small></div><hr><?php error_box($error); ?><?php if (!user()): ?><p>Sign in to choose your date and request your adventure.</p><a class="btn btn-primary w-100" href="/login.php">Log in to book ↗</a><p class="text-center mt-3 mb-0">New here? <a href="/register.php">Create an account</a></p><?php elseif (user()['role']!=='customer'): ?><p>Booking requests are available through customer accounts.</p><?php else: ?><form method="post" data-booking-price="<?= (int)$p['price_cents'] ?>"><?= csrf_field() ?><input type="hidden" name="request_token" value="<?= e($_SESSION['booking_token']) ?>"><?php field('Travel date','travel_date','date',$_POST['travel_date']??'','required min="'.date('Y-m-d').'" max="'.date('Y-m-d',strtotime('+2 years')).'"'); field('Travellers','travellers','number',$_POST['travellers']??1,'required min="1" max="'.(int)$p['capacity'].'"'); ?><div class="booking-total">Estimated total <strong id="booking-total" aria-live="polite"><?= money($p['price_cents']) ?></strong></div><button class="btn btn-primary w-100" type="submit">Request this adventure ↗</button><p class="small muted mt-3 mb-0">Subject to availability. Pending requests reserve spaces for your selected date. Cancel before departure from your dashboard.</p></form><?php endif; ?></div></aside></div></div>
+<?php page_end(); ?>

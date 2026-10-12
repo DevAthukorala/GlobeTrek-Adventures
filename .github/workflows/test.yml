@@ -1,0 +1,49 @@
+name: PHP and MySQL checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: globetrek_test
+          MYSQL_ROOT_PASSWORD: local-ci-only-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=30
+    env:
+      DB_DSN: mysql:host=127.0.0.1;port=3306;dbname=globetrek_test;charset=utf8mb4
+      DB_USER: root
+      DB_PASSWORD: local-ci-only-password
+      GLOBETREK_TEST: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Check PHP syntax
+        run: find app public scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Initialize database
+        run: php scripts/setup.php
+      - name: Start application
+        run: |
+          php -S 127.0.0.1:8080 -t public > /tmp/globetrek-server.log 2>&1 &
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8080/ > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Run integration checks
+        run: python3 tests/integration.py
+      - name: Server log on failure
+        if: failure()
+        run: cat /tmp/globetrek-server.log
