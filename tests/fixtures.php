@@ -2,7 +2,7 @@
 // Only run against an isolated development/test database. No production data is removed.
 if (PHP_SAPI !== 'cli' || getenv('GLOBETREK_TEST') !== '1') { exit(1); }
 require_once dirname(__DIR__).'/app/bootstrap.php';
-$suffix=bin2hex(random_bytes(6)); $password=bin2hex(random_bytes(12)); $accounts=[];
+$suffix=bin2hex(random_bytes(6)); $password=' '.bin2hex(random_bytes(12)).' '; $accounts=[];
 foreach (['customer','other','staff','admin'] as $role) {
     $email=$role.'.'.$suffix.'@example.test'; $dbRole=$role==='other'?'customer':$role;
     sql('INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)', ['Test '.$role,$email,password_hash($password,PASSWORD_DEFAULT),$dbRole]);

@@ -10,7 +10,7 @@ if (booking) {
   const total = document.getElementById('booking-total');
   const update = () => {
     const amount = Number(booking.dataset.bookingPrice) * Number(guests.value) / 100;
-    total.textContent = Number.isFinite(amount) && amount > 0 ? 'LKR ' + new Intl.NumberFormat('en-LK', {maximumFractionDigits: 0}).format(amount) : '—';
+    total.textContent = Number.isFinite(amount) && amount > 0 ? 'LKR ' + new Intl.NumberFormat('en-LK', {minimumFractionDigits: amount % 1 ? 2 : 0, maximumFractionDigits: 2}).format(amount) : '—';
   };
   guests.addEventListener('input', update);
   update();

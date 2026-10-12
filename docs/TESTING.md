@@ -5,7 +5,7 @@ Local verification on 12 October 2026 used PHP 8.5.11 and a separate MySQL 9.5 i
 ## Completed
 
 - Every application, configuration, setup and test PHP file passed `php -l`.
-- `tests/integration.py`: **59 checks passed** against the running PHP application and real MySQL database.
+- `tests/integration.py`: **60 checks passed** against the running PHP application and real MySQL database.
 - Public pages returned HTTP 200 and unknown packages returned 404.
 - Tested customer registration and duplicate-email handling, login/logout, CSRF rejection, staff/admin access restrictions and server-side role assignment.
 - Tested trusted prices, invalid dates/party sizes, departure capacity, duplicate form handling, cancellation ownership, released capacity and booking transition restrictions.

@@ -4,7 +4,7 @@ if (user()) go('/dashboard.php'); $error=null;
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     verify_csrf();
     try {
-        $name=text_input('name',2,100); $email=strtolower(text_input('email',3,190)); $password=text_input('password',12,72);
+        $name=text_input('name',2,100); $email=strtolower(text_input('email',3,190)); $password=password_input(12,72);
         if (!filter_var($email,FILTER_VALIDATE_EMAIL)) throw new InvalidArgumentException('Enter a valid email address.');
         if ($password !== ($_POST['password_confirmation']??'')) throw new InvalidArgumentException('Your passwords do not match.');
         sql('INSERT INTO users (name,email,password_hash) VALUES (?,?,?)',[$name,$email,password_hash($password,PASSWORD_DEFAULT)]);

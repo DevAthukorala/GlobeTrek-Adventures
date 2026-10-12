@@ -30,7 +30,7 @@ function db(): PDO {
 }
 function sql(string $query, array $params = []): PDOStatement { $s = db()->prepare($query); $s->execute($params); return $s; }
 function e(mixed $value): string { return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-function money(int|string $cents): string { return 'LKR ' . number_format((int)$cents / 100, 0); }
+function money(int|string $cents): string { return 'LKR ' . number_format((int)$cents / 100, (int)$cents % 100 === 0 ? 0 : 2); }
 function go(string $url): never { header('Location: ' . $url, true, 303); exit; }
 function csrf(): string { return $_SESSION['csrf'] ??= bin2hex(random_bytes(32)); }
 function csrf_field(): string { return '<input type="hidden" name="csrf" value="' . e(csrf()) . '">'; }
@@ -55,6 +55,11 @@ function text_input(string $key, int $min = 1, int $max = 200): string {
 function integer_input(string $key, int $min, int $max): int {
     $value = filter_var($_POST[$key] ?? null, FILTER_VALIDATE_INT);
     if ($value === false || $value < $min || $value > $max) throw new InvalidArgumentException('Please enter a valid ' . str_replace('_', ' ', $key) . '.');
+    return $value;
+}
+function password_input(int $min = 1, int $max = 200): string {
+    $value = is_string($_POST['password'] ?? null) ? $_POST['password'] : '';
+    if (strlen($value) < $min || strlen($value) > $max) throw new InvalidArgumentException("Password must be between $min and $max characters.");
     return $value;
 }
 function travel_date(string $value): string {

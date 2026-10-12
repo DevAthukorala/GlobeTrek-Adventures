@@ -108,6 +108,7 @@ check('vegetarian lunch can be arranged' not in other.get('/contact.php')[1], 'e
 package = {'title':'CRUD ' + fixture['suffix'],'destination':'Negombo','category':'Beach','description':'A complete description for a test tour package.','itinerary':'Day one: Walk along the beach.','inclusions':'Guide and local lunch','duration_days':1,'capacity':5,'price':'10000.50','image_url':'https://images.unsplash.com/photo-1510414842594-a61c69b5ae57'}
 result = staff.post('/staff/package-edit.php',package)
 check(result[2].endswith('/staff/packages.php'), 'staff creates package')
+check('LKR 10,000.50' in result[1], 'fractional prices retain their cents')
 row = re.search(r'<tr><td><strong>CRUD ' + fixture['suffix'] + r'</strong>.*?</tr>', result[1], re.S).group(0)
 pid = int(re.search(r'package-edit.php\?id=(\d+)',row).group(1))
 check('saved' in staff.post('/staff/package-edit.php?id='+str(pid),dict(package,title='Edited '+fixture['suffix']))[1], 'staff edits package')

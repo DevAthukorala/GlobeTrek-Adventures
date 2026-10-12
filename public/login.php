@@ -4,7 +4,7 @@ if (user()) go('/dashboard.php'); $error=null;
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     verify_csrf();
     try {
-        $email=strtolower(text_input('email',3,190)); $password=text_input('password',1,200);
+        $email=strtolower(text_input('email',3,190)); $password=password_input();
         $key=hash('sha256',$email.'|'.($_SERVER['REMOTE_ADDR']??'')); $now=time();
         // Database-backed throttling survives browser/session resets.
         sql('INSERT IGNORE INTO login_attempts (attempt_key,window_start) VALUES (?,?)',[$key,$now]);
